@@ -1,3 +1,5 @@
+--3.1
+
 -- ПРОСТЕЙШИЕ ЗАПРОСЫ:
 -- 1. Выдать информацию о местоположении отдела продаж (SALES) компании.
 SELECT DEPTADDR 
@@ -33,7 +35,7 @@ SELECT RTRIM(LOWER(EMPNAME), 't') AS NEWEMPNAME
 SELECT EMPNO, EMPNAME, TO_CHAR(BIRTHDATE, 'DD-MONTH-YYYY','NLS_DATE_LANGUAGE = AMERICAN') 
     FROM EMP
 --  То же, но год числом.
-SELECT EMPNO, EMPNAME, TO_CHAR(BIRTHDATE, 'DD-MONTH-YEAR','NLS_DATE_LANGUAGE = AMERICAN') 
+SELECT EMPNO, EMPNAME, TO_CHAR(BIRTHDATE, 'DD-MONTH-YEAR','NLS_DATE_LANGUAGE = RUSSIAN') 
     FROM EMP
  
 --  8. Выдать информацию о должностях, изменив названия должности “CLERK” и “DRIVER” на “WORKER”.   
@@ -102,8 +104,9 @@ SELECT E.EMPNAME, D.DEPTNAME, J.JOBNAME, C.STARTDATE, C.ENDDATE
     ORDER BY E.EMPNAME, C.STARTDATE;
     
 --  ВНЕШНЕЕ ОБЪЕДИНЕНИЕ:
---   16. Выдайте сведения о карьере сотрудников с указанием их имён. (Oracle syntax)
-SELECT EMPNAME, STARTDATE, ENDDATE
-    FROM EMP, CAREER
-    WHERE EMP.EMPNO = CAREER.EMPNO (+)
-    ORDER BY EMP.EMPNAME, CAREER.STARTDATE;
+--   16. Выдайте сведения о карьере сотрудников с указанием их имён.
+SELECT E.EMPNAME, C.STARTDATE, C.ENDDATE
+    FROM EMP E
+        RIGHT OUTER JOIN CAREER C
+            ON (E.EMPNO = C.EMPNO)
+    ORDER BY E.EMPNAME, C.STARTDATE;
