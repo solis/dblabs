@@ -52,6 +52,10 @@ INSERT INTO TMP_EMP VALUES
 
 -- 15 Удалите все записи из таблицы TMP_JOB и добавьте в нее информацию по тем специальностям,
 --    которые не используются в настоящий момент на предприятии.
+DELETE FROM TMP_JOB
+
+INSERT INTO TMP_JOB VALUES
+    (SELECT * FROM JOB WHERE JOBNO NOT IN (SELECT JOBNO FROM EMP))
 
 
 -- 16 Начислите зарплату в размере 120% минимального должностного оклада всем сотрудникам,
