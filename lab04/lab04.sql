@@ -33,6 +33,9 @@ UPDATE EMP
     WHERE SUBSTR(EMPNAME, 1, 1) = 'J';
 
 --6. Измените в таблице EMP имена служащих, состоящие из двух слов, так, чтобы оба слова в имени начинались с заглавной буквы, а продолжались прописными.
+UPDATE EMP
+    SET EMPNAME = INITCAP(EMPNAME)
+    WHERE EMPNAME LIKE('% %');
 
 --7. Приведите в таблице EMP имена служащих к верхнему регистру.
 UPDATE EMP
@@ -57,14 +60,41 @@ INSERT INTO CAREER VALUES (1004, 8000, 10, CURRENT_DATE, NULL);
 INSERT INTO CAREER VALUES (1004, 8001, 10, CURRENT_DATE, NULL);
 
 --12. Удалите все записи из таблицы TMP_EMP. Добавьте в нее информацию о сотрудниках, которые работают клерками в настоящий момент.
+DELETE FROM TMP_EMP;
+INSERT INTO TMP_EMP
+    SELECT *
+    FROM EMP E
+    WHERE E.EMPNO IN (SELECT EMPNO
+                        FROM CAREER NATURAL JOIN JOB
+                        WHERE JOBNAME = 'CLERK'
+                        AND STARTDATE IS NOT NULL
+                        AND ENDDATE IS NULL);
 
 --13. Добавьте в таблицу TMP_EMP информацию о тех сотрудниках, которые уже не работают на предприятии, а в период работы занимали только одну должность.
+INSERT INTO TMP_EMP
+    SELECT * FROM EMP E
+    WHERE E.EMPNO IN (SELECT EMPNO
+                        FROM CAREER C
+                        WHERE ENDDATE IS NOT NULL
+                                        AND ENDDATE < CURRENT_DATE
+                                        having COUNT(SELECT EMPNO FROM CAREER K
+                                        WHERE C.EMPNO = K.EMPNO)=1);
 
 --14. Выполните тот же запрос для тех сотрудников, которые никогда не приступали к работе на предприятии.
+INSERT INTO TMP_EMP
+    SELECT * FROM EMP E
+    WHERE E.EMPNO IN (SELECT EMPNO FROM CAREER
+                        WHERE STARTDATE IS NULL);
 
 --15. Удалите все записи из таблицы TMP_JOB и добавьте в нее информацию по тем специальностям, которые не используются в настоящий момент на предприятии.
+DELETE FROM TMP_JOB;
+INSERT INTO TMP_JOB
+    SELECT * FROM JOB J
+    WHERE NOT EXISTS (SELECT * FROM CAREER C
+                        WHERE C.JOBNO = J.JOBNO);
 
 --16. Начислите зарплату в размере 120% минимального должностного оклада всем сотрудникам, работающим на предприятии. Зарплату начислять по должности, занимаемой сотрудником в настоящий момент и отнести ее на прошлый месяц относительно текущей даты.
+INSERT INTO SALARY (EMPNO, SALVALUE, MONTH, YEAR) VALUES ((SELECT EMPNO, 1.2*MINSALARY FROM CAREER NATURAL JOIN JOB WHERE STARTDATE IS NOT NULL AND ENDDATE IS NULL), EXTRACT(MONTH FROM ADD_MONTHS(CURRENT_DATE, -1)), EXTRACT(YEAR FROM ADD_MONTHS(CURRENT_DATE, -1)));
 
 --17. Удалите данные о зарплате за прошлый год.
 DELETE FROM SALARY
