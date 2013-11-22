@@ -54,13 +54,12 @@ INSERT INTO TMP_EMP VALUES
 
 -- 13 Добавьте в таблицу TMP_EMP информацию о тех сотрудниках, которые уже не работают на
 --    предприятии, а в период работы занимали только одну должность.
-SELECT E.EMPNO, E.EMPNAME, E.BIRTHDATE , C.ENDDATE FROM
-    EMP E JOIN (
-        SELECT * FROM CAREER
-            WHERE ENDDATE IS NULL
-            HAVING COUNT(SELECT DISTINCT K.JOBNO FROM CAREER K WHERE K.EMPNO = E.EMPNOO) = 1
-            ) C ON E.EMPNO = C.EMPNO
-
+SELECT * FROM EMP
+    WHERE EMPNO IN
+        (SELECT EMPNO FROM CAREER WHERE EMPNO IN (SELECT EMPNO FROM (SELECT DISTINCT JOBNO, EMPNO FROM CAREER) T
+            GROUP BY EMPNO
+            HAVING COUNT(EMPNO) = 1)
+            AND ENDDATE IS NOT NULL AND ENDDATE < CURRENT_DATE)
 
 -- 14 Выполните тот же запрос для тех сотрудников, которые никогда не приступали к работе на
 --    предприятии.
