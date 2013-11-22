@@ -94,7 +94,10 @@ INSERT INTO TMP_JOB
                         WHERE C.JOBNO = J.JOBNO);
 
 --16. Начислите зарплату в размере 120% минимального должностного оклада всем сотрудникам, работающим на предприятии. Зарплату начислять по должности, занимаемой сотрудником в настоящий момент и отнести ее на прошлый месяц относительно текущей даты.
-INSERT INTO SALARY (EMPNO, SALVALUE, MONTH, YEAR) VALUES ((SELECT EMPNO, 1.2*MINSALARY FROM CAREER NATURAL JOIN JOB WHERE STARTDATE IS NOT NULL AND ENDDATE IS NULL), EXTRACT(MONTH FROM ADD_MONTHS(CURRENT_DATE, -1)), EXTRACT(YEAR FROM ADD_MONTHS(CURRENT_DATE, -1)));
+INSERT INTO SALARY (EMPNO, SALVALUE, MONTH, YEAR)
+    SELECT EMPNO, 1.2*MINSALARY, EXTRACT(MONTH FROM ADD_MONTHS(CURRENT_DATE, -1)), EXTRACT(YEAR FROM ADD_MONTHS(CURRENT_DATE, -1))
+    FROM CAREER NATURAL JOIN JOB
+    WHERE STARTDATE IS NOT NULL AND ENDDATE IS NULL;
 
 --17. Удалите данные о зарплате за прошлый год.
 DELETE FROM SALARY
