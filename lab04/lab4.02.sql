@@ -7,7 +7,7 @@ UPDATE JOB SET MINSALARY = 1.1*MINSALARY WHERE JOBNAME != 'FINANCIAL DIRECTOR';
 
 -- 3  Поднимите минимальную зарплату в таблице JOB на 10% для клерков и на 20% для финансового
 --    директора (одним оператором).
-UPDATE JOB SET MINSALARY = MINSALARY * (WHEN JOBNAME = 'CLERK' THEN 1.1 ELSE 1.2 END)
+UPDATE JOB SET MINSALARY = MINSALARY * (CASE WHEN JOBNAME = 'CLERK' THEN 1.1 ELSE 1.2 END)
     WHERE JOBNAME IN ('FINANCIAL DIRECTOR', 'CLERK')
 
 -- 4  Установите минимальную зарплату финансового директора равной 90% от зарплаты исполнительного
