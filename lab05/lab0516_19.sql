@@ -12,7 +12,11 @@ CREATE VIEW DISMISSED (EMPNAME, ENDDATE, DEPTNAME, JOBNAME) AS
     WHERE C.ENDDATE IS NOT NULL
 
 --3. Создайте представление, содержащее имя сотрудника, должность, занимаемую сотрудником в данный момент, суммарную заработную плату сотрудника за третий квартал 2010 года. Первый столбец назвать Sotrudnik, второй – Dolzhnost, третий – Itogo_3_kv.
-CREATE VIEW KVARTAL (SOTRUDNIK, DOLZHNOST, ITOGO_3_KV) AS SELECT E.EMPNAME, J.JOBNAME, SUM(S.SALVALUE) FROM JOB J NATURAL JOIN CAREER NATURAL JOIN EMP E NATURAL JOIN SALARY S WHERE S.YEAR = 2010 AND S.MONTH BETWEEN 7 AND 9
+CREATE OR REPLACE VIEW KVARTAL (SOTRUDNIK, DOLZHNOST, ITOGO_3_KV) AS
+SELECT E.EMPNAME, J.JOBNAME, SUM(S.SALVALUE)
+FROM JOB J NATURAL JOIN CAREER NATURAL JOIN EMP E NATURAL JOIN SALARY S
+WHERE S.YEAR = 2010 AND S.MONTH BETWEEN 7 AND 9
+GROUP BY E.EMPNAME, J.JOBNAME
 
 
 --4. На основе представления из задания 2 и таблицы SALARY создайте представление, содержащее данные об уволенных сотрудниках, которым зарплата начислялась более 2 раз. В созданном представлении месяц начисления зарплаты и сумма зарплаты вывести в одном столбце, в качестве разделителя использовать запятую.
