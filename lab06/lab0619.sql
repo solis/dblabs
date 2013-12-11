@@ -43,9 +43,8 @@ CREATE SEQUENCE Prepodavanie_ID_Generator
     NOMAXVALUE
     NOCYCLE;
 
---?????????????????????
 INSERT INTO Prepodavanie VALUES
-    (Prepodavanie_ID_Generator.NEXTVAL, Prepod_ID_Generator.CURRVAL, 1, '0');
+    (Prepodavanie_ID_Generator.NEXTVAL, 2, 1, '0');
 
 --3. Создайте индексы для тех полей базы данных, для которых это необходимо (academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL – Student\Section 12 Working with Sequences).
 CREATE INDEX ispytanie_stud_predm_ind
@@ -58,6 +57,16 @@ CREATE INDEX prepodavanie_prepod_predm_ind
     ON Prepodavanie(Prepod_ID, Predmet_ID);
 
 --4. В одну из таблиц добавьте поле (внешний ключ), значения которого ссылаются на поле – первичный ключ этой таблицы (academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL – Student\Section 8 Working with DDL Statements). Составьте запросы на выборку данных с использованием рефлексивного соединения (academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL – Student\Section 3 Executing Database Joins\Self Joins and Hierarchical Queries).
+ALTER TABLE Uchebnyi_Predmet
+    ADD (Prepodavanie_ID NUMBER(10));
+
+ALTER TABLE Uchebnyi_Predmet
+    ADD (Prepodavanie_ID NUMBER(10) NOT NULL REFERENCES Prepodavanie(Prepodavanie_ID));
+
+-- veery stupid!
+SELECT p1.Prepodavanie_ID
+    FROM Prepodavanie p1 INNER JOIN Prepodavanie p2
+    ON p1.Prepodavanie_ID = p2.Prepodavanie_ID;
 
 --Составьте запросы на выборку данных с использованием следующих операторов, конструкций и функций языка SQL:
 --5. простого оператора CASE ();
@@ -95,14 +104,15 @@ SELECT s.FIO, p.Nazvanie,
 
 --7. оператора WITH();
 -- выбрать имена преподавателей практики, ведущих предметы в осенних семестрах (1,3,5,7,9)
---???????????????????????????????????
 WITH Osennie AS
     (SELECT Predmet_ID
         FROM Uchebnyi_Predmet
         WHERE Predmet_Semestr IN (1,3,5,7,9))
 SELECT p.FIO
     FROM Prepodavatel p NATURAL JOIN Prepodavanie pr
-    WHERE pr.Predmet_ID IN Osennie
+    WHERE pr.Predmet_ID IN
+        (SELECT *
+        FROM Osennie)
     GROUP BY p.FIO;
 
 --8. встроенного представления();
