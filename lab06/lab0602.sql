@@ -207,6 +207,13 @@ SELECT * FROM horse WHERE Sex = 'Male'
 
 
 --8. встроенного представления();
+SELECT JOCKEY_NAME, OWNER_NAME, NICK AS HORSE_NICK FROM
+    (SELECT OWNER_ID, JOCKEY_ID, NICK FROM HORSES) H
+    JOIN (SELECT ID, NAME AS OWNER_NAME FROM OWNERS) O
+    ON O.ID = H.OWNER_ID
+    JOIN (SELECT ID, NAME AS JOCKEY_NAME FROM JOCKEYS) J
+    ON J.ID = H.JOCKEY_ID
+
 
 --9. некоррелированного запроса((academy.oracle.com\iLearning\2013-2014 Oracle Academy Database
 --   Programming with SQL – Student\Section 6 Creating Subqueries).);
