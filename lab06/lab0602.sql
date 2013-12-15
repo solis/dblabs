@@ -247,5 +247,9 @@ SELECT *
 
 
 --14. функции ROLLUP().
+-- Вывести статистику занимаемых позиций каждой лошадью
+SELECT HORSE_ID, POSITION, COUNT(POSITION)
+    FROM RESULTS
+    GROUP BY ROLLUP(HORSE_ID, POSITION)
 
 --15. Составьте запрос на использование оператора MERGE языка манипулирования данными.
