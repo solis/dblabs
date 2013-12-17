@@ -285,15 +285,51 @@ END TAX_EVAL;
 --      происходит обновление поля SALVALUE, то при назначении новой зарплаты, меньшей чем
 --      должностной оклад (таблица JOB, поле MINSALARY), изменение не вносится  и сохраняется старое
 --      значение, если новое значение зарплаты больше должностного оклада, то изменение вносится.
+CREATE OR REPLACE  TRIGGER CHECK_SALARY
+    BEFORE  UPDATE
+    OF SALVALUE
+    ON SALARY
+    FOR EACH ROW
+BEGIN
+    IF (NEW.SALARY < (SELECT MINSALARY FROM JOB
+       WHERE JOBNO = (SELECT JOBNO FROM CAREER
+           WHERE EMPNO = NEW.EMPNO AND ENDDATE IS NULL)))
+    THEN
+        UPDATE SALARY SET SALVALUE = OLD.SALVALUE
+           WHERE EMPNO = OLD.EMPNO;
+    END IF:
+END;
+
 
 -- 08. Создайте триггер, действующий при удалении записи из таблицы CAREER. Если в удаляемой строке
 --     поле ENDDATE содержит NULL, то запись не удаляется, в противном случае удаляется.
+CREATE OR REPLACE  TRIGGER CHECK_NOT_NULL
+    AFTER DELETE ON CAREER
+    FOR EACH ROW
+    WHEN (OLD.ENDDATE IS NULL)
+BEGIN
+  INSERT INTO CAREER VALUES (OLD.JOBNO, OLD.EMPNO, OLD.STARTDATE, OLD.ENDDATE);
+END;
 
 -- 09. Создайте триггер, действующий на добавление или изменение данных в таблице EMP.
 --     Если во вставляемой или изменяемой строке поле BIRTHDATE содержит NULL, то после вставки или
 --     изменения должно быть выдано сообщение ‘BERTHDATE is NULL’. Если во вставляемой или изменяемой
 --     строке поле BIRTHDATE содержит дату ранее ‘01-01-1940’, то должно быть выдано сообщение
 --     ‘PENTIONA’. Во вновь вставляемой строке имя служащего должно быть приведено к заглавным букваь.
+CREATE OR REPLACE TRIGGER ON_EMP_INSERT_UPDATE
+    BEFORE INSERT OR UPDATE ON EMP
+    FOR EACH ROW
+BEGIN
+    IF NEW.BIRTHDATE IS NULL THEN
+        -- show message
+    END IF;
+
+    IF NEW.BIRTHDATE < to_date('01-01-1940', 'dd-mm-yyyy') THEN
+        -- show message
+    END IF;
+
+    NEW.EMPNAME := UCASE(NEW.EMPNAME)
+END;
 
 --10.  Создайте программу изменения типа заданной переменной из символьного типа (VARCHAR2) в
 --     числовой тип (NUMBER).
