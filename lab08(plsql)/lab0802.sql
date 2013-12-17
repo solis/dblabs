@@ -14,41 +14,25 @@ ALTER TABLE SALARY ADD (TAX NUMBER(15))
 CREATE OR REPLACE PROCEDURE TAX_SIMPLE_LOOP_IF AS
     SUMSAL NUMBER(16);
 BEGIN
-    FOR R IN SELECT * FROM SALARY
+    FOR R IN (SELECT * FROM SALARY)
     LOOP
-        SELECT SUM(SALVALUE) INTO SUMSAL FROM SALARY WHERE R.EMPNO = EMPID AND R.YEAR = YEAR(SYSDATE));
+        SELECT SUM(SALVALUE) INTO SUMSAL FROM SALARY S
+            WHERE S.EMPNO = R.EMPNO AND S.MONTH > R.MONTH AND S.YEAR = R.YEAR;
+
         IF SUMSAL < 20000 THEN
-            R.TAX = R.SALVALUE * 0.09;
+            UPDATE SALARY SET TAX = R.SALVALUE * 0.09
+                WHERE EMPNO = R.EMPNO AND MONTH = R.MONTH AND YEAR = R.YEAR;
         ELSIF SUMSAL < 30000 THEN
-            R.TAX = R.SALVALUE * 0.12;
+            UPDATE SALARY SET TAX = R.SALVALUE * 0.12
+                WHERE EMPNO = R.EMPNO AND MONTH = R.MONTH AND YEAR = R.YEAR;
         ELSE
-            R.TAX = R.SALVALUE * 0.15;
-        END;
+            UPDATE SALARY SET TAX = R.SALVALUE * 0.15
+                WHERE EMPNO = R.EMPNO AND MONTH = R.MONTH AND YEAR = R.YEAR;
+        END IF;
     END LOOP;
     COMMIT;
 END
 
--- b) с помощью простого цикла (loop) с курсором и оператора case;
-CREATE OR REPLACE PROCEDURE TAX_CUR_LOOP_CASE AS
-    SUMSAL NUMBER(16);
-BEGIN
-    FOR R IN SELECT * FROM SALARY
-    LOOP
-        SELECT SUM(SALVALUE) INTO SUMSAL FROM SALARY WHERE R.EMPNO = EMPID AND R.YEAR = YEAR(SYSDATE));
-        CASE
-            WHEN SUMSAL < 20000 THEN
-                R.TAX = R.SALVALUE * 0.09;
-            WHEN SUMSAL < 30000 THEN
-                R.TAX = R.SALVALUE * 0.12;
-            ELSE
-                R.TAX = R.SALVALUE * 0.15;
-        END;
-    END LOOP;
-    COMMIT;
-END TAX_CUR_LOOP_CASE;
-
-
--- c) с помощью курсорного цикла FOR;
 CREATE OR REPLACE PROCEDURE TAX_CUR_LOOP_CASE AS
     SUMSAL NUMBER(16);
     CURSOR CUR IS SELECT EMPNO, SALVALUE, TAX FROM SALARY FOR UPDATE OF TAX;
@@ -58,17 +42,69 @@ BEGIN
     LOOP
         FETCH CUR INTO R;
         EXIT WHEN CUR%NOTFOUND;
-        SELECT SUM(SALVALUE) INTO SUMSAL FROM SALARY WHERE R.EMPNO = EMPID AND R.YEAR = YEAR(SYSDATE));
-        CASE
-            WHEN SUMSAL < 20000 THEN
-                R.TAX = R.SALVALUE * 0.09;
-            WHEN SUMSAL < 30000 THEN
-                R.TAX = R.SALVALUE * 0.12;
-            ELSE
-                R.TAX = R.SALVALUE * 0.15;
-        END;
+        SELECT SUM(SALVALUE) INTO SUMSAL FROM SALARY S
+            WHERE S.EMPNO = R.EMPNO AND S.MONTH > R.MONTH AND S.YEAR = R.YEAR;
+
+        IF SUMSAL < 20000 THEN
+            UPDATE SALARY SET TAX = R.SALVALUE * 0.09
+                WHERE EMPNO = R.EMPNO AND MONTH = R.MONTH AND YEAR = R.YEAR;
+        ELSIF SUMSAL < 30000 THEN
+            UPDATE SALARY SET TAX = R.SALVALUE * 0.12
+                WHERE EMPNO = R.EMPNO AND MONTH = R.MONTH AND YEAR = R.YEAR;
+        ELSE
+            UPDATE SALARY SET TAX = R.SALVALUE * 0.15
+                WHERE EMPNO = R.EMPNO AND MONTH = R.MONTH AND YEAR = R.YEAR;
+        END IF;
     END LOOP;
     CLOSE CUR;
+    COMMIT;
+END TAX_CUR_LOOP_CASE;
+
+-- b) с помощью простого цикла (loop) с курсором и оператора case;
+CREATE OR REPLACE PROCEDURE TAX__LOOP_CUR_CASE AS
+    SUMSAL NUMBER(16);
+    CURSOR CUR IS SELECT EMPNO, SALVALUE, TAX, YEAR, MONTH FROM SALARY FOR UPDATE OF TAX;
+    R CUR%ROWTYPE;
+BEGIN
+    OPEN CUR;
+    LOOP
+        FETCH CUR INTO R;
+        EXIT WHEN CUR%NOTFOUND;
+        SELECT SUM(SALVALUE) INTO SUMSAL FROM SALARY S
+            WHERE S.EMPNO = R.EMPNO AND S.MONTH > R.MONTH AND S.YEAR = R.YEAR;
+
+        UPDATE SALARY SET TAX =
+            CASE
+                WHEN SUMSAL < 20000 THEN R.SALVALUE * 0.09
+                WHEN SUMSAL < 30000 THEN R.SALVALUE * 0.12
+                ELSE R.SALVALUE * 0.15
+            END
+
+            WHERE EMPNO = R.EMPNO AND MONTH = R.MONTH AND YEAR = R.YEAR;
+    END LOOP;
+    CLOSE CUR;
+    COMMIT;
+END TAX_LOOP_CUR_CASE;
+
+
+-- c) с помощью курсорного цикла FOR;
+CREATE OR REPLACE PROCEDURE TAX_CUR_LOOP_CASE AS
+    SUMSAL NUMBER(16);
+    CURSOR CUR IS SELECT EMPNO, SALVALUE, TAX, YEAR, MONTH FROM SALARY FOR UPDATE OF TAX;
+BEGIN
+    LOOP R IN CUR
+        SELECT SUM(SALVALUE) INTO SUMSAL FROM SALARY S
+            WHERE S.EMPNO = R.EMPNO AND S.MONTH > R.MONTH AND S.YEAR = R.YEAR;
+
+        UPDATE SALARY SET TAX =
+            CASE
+                WHEN SUMSAL < 20000 THEN R.SALVALUE * 0.09
+                WHEN SUMSAL < 30000 THEN R.SALVALUE * 0.12
+                ELSE R.SALVALUE * 0.15
+            END
+
+            WHERE EMPNO = R.EMPNO AND MONTH = R.MONTH AND YEAR = R.YEAR;
+    END LOOP;
     COMMIT;
 END TAX_CUR_LOOP_CASE;
 
@@ -76,41 +112,176 @@ END TAX_CUR_LOOP_CASE;
 --    налог.
 CREATE  OR  REPLACE  PROCEDURE  TAX_PARAM (EMPID  NUMBER)  AS
 DECLARE
+    CURSOR CUR IS SELECT EMPNO, SALVALUE, TAX, YEAR, MONTH FROM SALARY
+        WHERE EMPNO = EMPID
+        FOR UPDATE OF TAX;
     SUMSAL NUMBER(16);
 BEGIN
-    SELECT SUM(SALVALUE) FROM SALARY WHERE EMPNO = EMPID AND YEAR = YEAR(SYSDATE)
-    UPDATE  SALARY S SET  TAX =
-        CASE
-            WHEN SUMSAL < 20000 THEN S.SALVALUE * 0.09
-            WHEN SUMSAL < 30000 THEN S.SALVALUE * 0.12
-            ELSE S.SALVALUE * 0.15
-        END
-        WHERE  KNIGA.КОД_КНИГИ = UVEL.КОД_КНИГИ;
-            IF  SQL%NOTFOUND  THEN
-               INSERT  INTO  KNIGA (КОД_КНИГИ)  VALUES
-                (UVEL.КОД_КНИГИ);
-        END  IF;
+    LOOP R IN CUR
+        SELECT SUM(SALVALUE) INTO SUMSAL FROM SALARY S
+            WHERE S.EMPNO = R.EMPNO AND S.MONTH > R.MONTH AND S.YEAR = R.YEAR;
+
+        UPDATE SALARY SET TAX =
+            CASE
+                WHEN SUMSAL < 20000 THEN R.SALVALUE * 0.09
+                WHEN SUMSAL < 30000 THEN R.SALVALUE * 0.12
+                ELSE R.SALVALUE * 0.15
+            END
+
+            WHERE EMPNO = R.EMPNO AND MONTH = R.MONTH AND YEAR = R.YEAR;
+    END LOOP;
     COMMIT;
 END  TAX_PARAM;
 
 -- 04. Создайте процедуру, вычисляющую налог на зарплату за всё время начислений для конкретного
 --     сотрудника. В качестве параметров передать процент налога (до 20000, до 30000, выше 30000,
 --     номер сотрудника).
-CREATE  OR  REPLACE  PROCEDURE  TAX_PARAM_LESS
-    (UNDER_20k NUMBER, OVER_20k NUMBER, OVER_30k NUMBER, EMPID  NUMBER)  AS
+CREATE  OR  REPLACE  PROCEDURE  TAX_PARAM_LESS (
+    UNDER_20k NUMBER,
+    OVER_20k NUMBER,
+    OVER_30k NUMBER,
+    EMPID  NUMBER)  AS
+DECLARE
+    CURSOR CUR IS SELECT EMPNO, SALVALUE, TAX, YEAR, MONTH FROM SALARY
+        WHERE EMPNO = EMPID;
     SUMSAL NUMBER(16);
 BEGIN
-    SELECT SUM(SALVALUE) INTO SUMSAL FROM SALARY WHERE EMPNO = EMPID AND YEAR = YEAR(SYSDATE);
-    UPDATE  SALARY  SET  TAX =
-        CASE
-            WHEN SUMSAL < 20000 THEN SALVALUE * UNDER_20k
-            WHEN SUMSAL < 30000 THEN SALVALUE * OVER_20k
-            ELSE SALVALUE * OVER_30k
-        END
-    WHERE  SALARY.EMPNO = EMPID
+    LOOP R IN CUR
+        SELECT SUM(SALVALUE) INTO SUMSAL FROM SALARY S
+            WHERE S.EMPNO = R.EMPNO AND S.MONTH > R.MONTH AND S.YEAR = R.YEAR;
+
+        UPDATE SALARY SET TAX =
+            CASE
+                WHEN SUMSAL < 20000 THEN R.SALVALUE * UNDER_20k
+                WHEN SUMSAL < 30000 THEN R.SALVALUE * OVER_20k
+                ELSE R.SALVALUE * OVER_30k
+            END
+
+            WHERE EMPNO = R.EMPNO AND MONTH = R.MONTH AND YEAR = R.YEAR;
+    END LOOP;
     COMMIT;
 END  TAX_PARAM_LESS;
 
 -- 05.  Создайте функцию, вычисляющую суммарный налог на зарплату сотрудника за всё время начислений.
 --      В качестве параметров передать процент налога (до 20000, до 30000, выше 30000, номер
 --      сотрудника). Возвращаемое значение – суммарный налог.
+CREATE  OR  REPLACE  FUNCTION  FTAX_PARAM_LESS (
+    UNDER_20k NUMBER,
+    OVER_20k NUMBER,
+    OVER_30k NUMBER,
+    EMPID  NUMBER) RETURN NUMBER(16)  AS
+
+DECLARE
+    CURSOR CUR IS SELECT EMPNO, SALVALUE, TAX, YEAR, MONTH FROM SALARY
+        WHERE EMPNO = EMPID;
+    SUMSAL NUMBER(16);
+    RESULT NUMBER(16);
+BEGIN
+    LOOP R IN CUR
+        SELECT SUM(SALVALUE) INTO SUMSAL FROM SALARY S
+            WHERE S.EMPNO = R.EMPNO AND S.MONTH > R.MONTH AND S.YEAR = R.YEAR;
+
+        RESULT := RESULT +
+            CASE
+                WHEN SUMSAL < 20000 THEN R.SALVALUE * UNDER_20k
+                WHEN SUMSAL < 30000 THEN R.SALVALUE * OVER_20k
+                ELSE R.SALVALUE * OVER_30k
+            END
+
+    END LOOP;
+
+END  FTAX_PARAM_LESS;
+
+
+-- 06.  Создайте пакет, включающий в свой состав процедуру вычисления налога для всех сотрудников,
+--      процедуру вычисления налогов для отдельного сотрудника, идентифицируемого своим номером,
+--      функцию вычисления суммарного налога на зарплату сотрудника за всё время начислений.
+CREATE OR REPLACE PACKAGE TAX_EVAL AS
+    PROCEDURE TAX_SIMPLE_LOOP_IF();
+    PROCEDURE  TAX_PARAM (EMPID  NUMBER);
+    PROCEDURE  TAX_PARAM_LESS (
+    UNDER_20k NUMBER,
+    OVER_20k NUMBER,
+    OVER_30k NUMBER,
+    EMPID  NUMBER);
+
+
+END TAX_EVAL;
+
+CREATE OR REPLACE PACKAGE BODY TAX_EVAL AS
+    CREATE OR REPLACE PROCEDURE TAX_SIMPLE_LOOP_IF AS
+        SUMSAL NUMBER(16);
+    BEGIN
+        FOR R IN (SELECT * FROM SALARY)
+        LOOP
+            SELECT SUM(SALVALUE) INTO SUMSAL FROM SALARY S
+                WHERE S.EMPNO = R.EMPNO AND S.MONTH > R.MONTH AND S.YEAR = R.YEAR;
+
+            IF SUMSAL < 20000 THEN
+                UPDATE SALARY SET TAX = R.SALVALUE * 0.09
+                    WHERE EMPNO = R.EMPNO AND MONTH = R.MONTH AND YEAR = R.YEAR;
+            ELSIF SUMSAL < 30000 THEN
+                UPDATE SALARY SET TAX = R.SALVALUE * 0.12
+                    WHERE EMPNO = R.EMPNO AND MONTH = R.MONTH AND YEAR = R.YEAR;
+            ELSE
+                UPDATE SALARY SET TAX = R.SALVALUE * 0.15
+                    WHERE EMPNO = R.EMPNO AND MONTH = R.MONTH AND YEAR = R.YEAR;
+            END IF;
+        END LOOP;
+        COMMIT;
+    END;
+
+    CREATE  OR  REPLACE  PROCEDURE  TAX_PARAM (EMPID  NUMBER)  AS
+    DECLARE
+        CURSOR CUR IS SELECT EMPNO, SALVALUE, TAX, YEAR, MONTH FROM SALARY
+            WHERE EMPNO = EMPID
+            FOR UPDATE OF TAX;
+        SUMSAL NUMBER(16);
+    BEGIN
+        LOOP R IN CUR
+            SELECT SUM(SALVALUE) INTO SUMSAL FROM SALARY S
+                WHERE S.EMPNO = R.EMPNO AND S.MONTH > R.MONTH AND S.YEAR = R.YEAR;
+
+            UPDATE SALARY SET TAX =
+                CASE
+                    WHEN SUMSAL < 20000 THEN R.SALVALUE * 0.09
+                    WHEN SUMSAL < 30000 THEN R.SALVALUE * 0.12
+                    ELSE R.SALVALUE * 0.15
+                END
+
+                WHERE EMPNO = R.EMPNO AND MONTH = R.MONTH AND YEAR = R.YEAR;
+        END LOOP;
+        COMMIT;
+    END  TAX_PARAM;
+
+    CREATE  OR  REPLACE  PROCEDURE  TAX_PARAM_LESS (
+    UNDER_20k NUMBER,
+    OVER_20k NUMBER,
+    OVER_30k NUMBER,
+    EMPID  NUMBER)  AS
+    DECLARE
+        CURSOR CUR IS SELECT EMPNO, SALVALUE, TAX, YEAR, MONTH FROM SALARY
+            WHERE EMPNO = EMPID;
+        SUMSAL NUMBER(16);
+    BEGIN
+        LOOP R IN CUR
+            SELECT SUM(SALVALUE) INTO SUMSAL FROM SALARY S
+                WHERE S.EMPNO = R.EMPNO AND S.MONTH > R.MONTH AND S.YEAR = R.YEAR;
+
+            UPDATE SALARY SET TAX =
+                CASE
+                    WHEN SUMSAL < 20000 THEN R.SALVALUE * UNDER_20k
+                    WHEN SUMSAL < 30000 THEN R.SALVALUE * OVER_20k
+                    ELSE R.SALVALUE * OVER_30k
+                END
+
+                WHERE EMPNO = R.EMPNO AND MONTH = R.MONTH AND YEAR = R.YEAR;
+        END LOOP;
+        COMMIT;
+    END  TAX_PARAM_LESS;
+END TAX_EVAL;
+
+-- 07.  Создайте триггер, действующий при обновлении данных в таблице SALARY. А именно, если
+--      происходит обновление поля SALVALUE, то при назначении новой зарплаты, меньшей чем
+--      должностной оклад (таблица JOB, поле MINSALARY), изменение не вносится  и сохраняется старое
+--      значение, если новое значение зарплаты больше должностного оклада, то изменение вносится.
