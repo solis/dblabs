@@ -76,9 +76,6 @@ CREATE INDEX racearea_guests_ind
 
 --4. ¬ одну из таблиц добавьте поле (внешний ключ), значени€ которого ссылаютс€ на поле Ц первичный ключ этой таблицы (academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL Ц Student\Section 8 Working with DDL Statements). —оставьте запросы на выборку данных с использованием рефлексивного соединени€ (academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL Ц Student\Section 3 Executing Database Joins\Self Joins and Hierarchical Queries).
 ALTER TABLE Events
-    ADD (Competition_ID NUMBER(10));
-
-ALTER TABLE Events
     ADD (Competition_ID NUMBER(10) NOT NULL REFERENCES Competitions(Competition_ID));
 
 -- добавим в таблицу Resuts иерархию - кака€ лошадь после какой финишировала
@@ -158,7 +155,7 @@ SELECT c.Competition_Name
     WHERE e.RaceArea_ID IN
         (SELECT RaceArea_ID
             FROM RaceAreas
-            WHERE RaceArea_MaxNumOfGuests = e.Event_NumOfGuests)l
+            WHERE RaceArea_MaxNumOfGuests = e.Event_NumOfGuests);
 
 --11. функции NULLIF (academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL Ц Student\Section 2 Using Single-Row Functions);
 -- вывести список всех лошадей, скрыв пол у женских особей
