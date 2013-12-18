@@ -61,7 +61,7 @@ BEGIN
 END TAX_CUR_LOOP_CASE;
 
 -- b) с помощью простого цикла (loop) с курсором и оператора case;
-CREATE OR REPLACE PROCEDURE TAX__LOOP_CUR_CASE AS
+CREATE OR REPLACE PROCEDURE TAX_LOOP_CUR_CASE AS
     SUMSAL NUMBER(16);
     CURSOR CUR IS SELECT EMPNO, SALVALUE, TAX, YEAR, MONTH FROM SALARY FOR UPDATE OF TAX;
     R CUR%ROWTYPE;
@@ -89,11 +89,11 @@ END TAX_LOOP_CUR_CASE;
 
 -- c) с помощью курсорного цикла FOR;
 CREATE OR REPLACE PROCEDURE TAX_CUR_LOOP_CASE AS
-    SUMSAL NUMBER(16);
+    SUMSAL NUMBER;
     CURSOR CUR IS SELECT EMPNO, SALVALUE, TAX, YEAR, MONTH FROM SALARY FOR UPDATE OF TAX;
 BEGIN
-    LOOP R IN CUR
-        SELECT SUM(SALVALUE) INTO SUMSAL FROM SALARY S
+   FOR R IN CUR LOOP
+         SELECT SUM(SALVALUE) INTO SUMSAL FROM SALARY S
             WHERE S.EMPNO = R.EMPNO AND S.MONTH > R.MONTH AND S.YEAR = R.YEAR;
 
         UPDATE SALARY SET TAX =
@@ -111,13 +111,12 @@ END TAX_CUR_LOOP_CASE;
 -- d) с помощью курсора с параметром, передавая номер сотрудника, для которого необходимо посчитать
 --    налог.
 CREATE  OR  REPLACE  PROCEDURE  TAX_PARAM (EMPID  NUMBER)  AS
-DECLARE
     CURSOR CUR IS SELECT EMPNO, SALVALUE, TAX, YEAR, MONTH FROM SALARY
         WHERE EMPNO = EMPID
         FOR UPDATE OF TAX;
     SUMSAL NUMBER(16);
 BEGIN
-    LOOP R IN CUR
+    FOR R IN CUR LOOP
         SELECT SUM(SALVALUE) INTO SUMSAL FROM SALARY S
             WHERE S.EMPNO = R.EMPNO AND S.MONTH > R.MONTH AND S.YEAR = R.YEAR;
 
@@ -136,17 +135,15 @@ END  TAX_PARAM;
 -- 04. Создайте процедуру, вычисляющую налог на зарплату за всё время начислений для конкретного
 --     сотрудника. В качестве параметров передать процент налога (до 20000, до 30000, выше 30000,
 --     номер сотрудника).
-CREATE  OR  REPLACE  PROCEDURE  TAX_PARAM_LESS (
-    UNDER_20k NUMBER,
+CREATE  OR  REPLACE  PROCEDURE  TAX_PARAM_LESS (EMPID  NUMBER, UNDER_20k NUMBER,
     OVER_20k NUMBER,
-    OVER_30k NUMBER,
-    EMPID  NUMBER)  AS
-DECLARE
+    OVER_30k NUMBER)  AS
     CURSOR CUR IS SELECT EMPNO, SALVALUE, TAX, YEAR, MONTH FROM SALARY
-        WHERE EMPNO = EMPID;
+        WHERE EMPNO = EMPID
+        FOR UPDATE OF TAX;
     SUMSAL NUMBER(16);
 BEGIN
-    LOOP R IN CUR
+    FOR R IN CUR LOOP
         SELECT SUM(SALVALUE) INTO SUMSAL FROM SALARY S
             WHERE S.EMPNO = R.EMPNO AND S.MONTH > R.MONTH AND S.YEAR = R.YEAR;
 
@@ -162,22 +159,23 @@ BEGIN
     COMMIT;
 END  TAX_PARAM_LESS;
 
+
 -- 05.  Создайте функцию, вычисляющую суммарный налог на зарплату сотрудника за всё время начислений.
 --      В качестве параметров передать процент налога (до 20000, до 30000, выше 30000, номер
 --      сотрудника). Возвращаемое значение – суммарный налог.
 CREATE  OR  REPLACE  FUNCTION  FTAX_PARAM_LESS (
+    EMPID  NUMBER,
     UNDER_20k NUMBER,
     OVER_20k NUMBER,
-    OVER_30k NUMBER,
-    EMPID  NUMBER) RETURN NUMBER(16)  AS
+    OVER_30k NUMBER) RETURN NUMBER  AS
 
-DECLARE
     CURSOR CUR IS SELECT EMPNO, SALVALUE, TAX, YEAR, MONTH FROM SALARY
         WHERE EMPNO = EMPID;
     SUMSAL NUMBER(16);
     RESULT NUMBER(16);
 BEGIN
-    LOOP R IN CUR
+    RESULT := 0;
+    FOR R IN CUR LOOP
         SELECT SUM(SALVALUE) INTO SUMSAL FROM SALARY S
             WHERE S.EMPNO = R.EMPNO AND S.MONTH > R.MONTH AND S.YEAR = R.YEAR;
 
@@ -186,12 +184,14 @@ BEGIN
                 WHEN SUMSAL < 20000 THEN R.SALVALUE * UNDER_20k
                 WHEN SUMSAL < 30000 THEN R.SALVALUE * OVER_20k
                 ELSE R.SALVALUE * OVER_30k
-            END
+            END;
 
     END LOOP;
-
+    RETURN RESULT;
 END  FTAX_PARAM_LESS;
 
+-- Вызов
+SELECT FTAX_PARAM_LESS(EMPNO, 1, 2, 3) FROM SALARY
 
 -- 06.  Создайте пакет, включающий в свой состав процедуру вычисления налога для всех сотрудников,
 --      процедуру вычисления налогов для отдельного сотрудника, идентифицируемого своим номером,
@@ -209,7 +209,7 @@ CREATE OR REPLACE PACKAGE TAX_EVAL AS
 END TAX_EVAL;
 
 CREATE OR REPLACE PACKAGE BODY TAX_EVAL AS
-    CREATE OR REPLACE PROCEDURE TAX_SIMPLE_LOOP_IF AS
+    PROCEDURE TAX_SIMPLE_LOOP_IF AS
         SUMSAL NUMBER(16);
     BEGIN
         FOR R IN (SELECT * FROM SALARY)
@@ -231,7 +231,7 @@ CREATE OR REPLACE PACKAGE BODY TAX_EVAL AS
         COMMIT;
     END;
 
-    CREATE  OR  REPLACE  PROCEDURE  TAX_PARAM (EMPID  NUMBER)  AS
+    PROCEDURE  TAX_PARAM (EMPID  NUMBER)  AS
     DECLARE
         CURSOR CUR IS SELECT EMPNO, SALVALUE, TAX, YEAR, MONTH FROM SALARY
             WHERE EMPNO = EMPID
@@ -254,7 +254,7 @@ CREATE OR REPLACE PACKAGE BODY TAX_EVAL AS
         COMMIT;
     END  TAX_PARAM;
 
-    CREATE  OR  REPLACE  PROCEDURE  TAX_PARAM_LESS (
+    PROCEDURE  TAX_PARAM_LESS (
     UNDER_20k NUMBER,
     OVER_20k NUMBER,
     OVER_30k NUMBER,
@@ -285,19 +285,21 @@ END TAX_EVAL;
 --      происходит обновление поля SALVALUE, то при назначении новой зарплаты, меньшей чем
 --      должностной оклад (таблица JOB, поле MINSALARY), изменение не вносится  и сохраняется старое
 --      значение, если новое значение зарплаты больше должностного оклада, то изменение вносится.
-CREATE OR REPLACE  TRIGGER CHECK_SALARY
-    BEFORE  UPDATE
-    OF SALVALUE
-    ON SALARY
-    FOR EACH ROW
+CREATE OR REPLACE TRIGGER CHECK_SALARY
+    BEFORE UPDATE OF SALVALUE ON SALARY FOR EACH ROW
+DECLARE
+    CUR(EMPID CAREER.EMPNO%TYPE) IS
+        SELECT MINSALARY FROM JOB
+            WHERE JOBNO = (SELECT JOBNO FROM CAREER WHERE EMPID = EMPNO AND ENDDATE IS NULL);
+    R JOB.MINSALARY%TYPE;
+
 BEGIN
-    IF (NEW.SALARY < (SELECT MINSALARY FROM JOB
-       WHERE JOBNO = (SELECT JOBNO FROM CAREER
-           WHERE EMPNO = NEW.EMPNO AND ENDDATE IS NULL)))
-    THEN
-        UPDATE SALARY SET SALVALUE = OLD.SALVALUE
-           WHERE EMPNO = OLD.EMPNO;
-    END IF:
+    OPEN CUR(:NEW.EMPNO);
+    FETCH CUR INTO R;
+    IF (:NEW.SALVALUE < R) THEN
+        :NEW.SALVALUE := :OLD.SALVALUE;
+    END IF;
+    CLOSE CUR;
 END;
 
 
@@ -321,14 +323,14 @@ CREATE OR REPLACE TRIGGER ON_EMP_INSERT_UPDATE
     FOR EACH ROW
 BEGIN
     IF NEW.BIRTHDATE IS NULL THEN
-        -- show message
+        RAISE_APPLICATION_ERROR(-2000, 'BIRTHDATE IS NULL')
     END IF;
 
     IF NEW.BIRTHDATE < to_date('01-01-1940', 'dd-mm-yyyy') THEN
-        -- show message
+        RAISE_APPLICATION_ERROR(-3000, 'PENTIONA')
     END IF;
 
-    NEW.EMPNAME := UCASE(NEW.EMPNAME)
+    NEW.EMPNAME := UCASE(NEW.EMPNAME);
 END;
 
 --10.  Создайте программу изменения типа заданной переменной из символьного типа (VARCHAR2) в
@@ -336,3 +338,24 @@ END;
 --     Программа должна содержать раздел обработки исключений. Обработка должна заключаться в выдаче
 --     сообщения ‘ERROR: argument is not a number’ .  Исключительная ситуация возникает при задании
 --     строки в виде числа с запятой, разделяющей дробную и целую части.
+DECLARE
+    X number;
+    FUNCTION str2nr(str in varchar2) return NUMBER  IS
+    BEGIN
+        RETURN CAST(str AS NUMBER);
+        EXCEPTION
+        WHEN VALUE_ERROR THEN
+            DBMS_OUTPUT.PUT_LINE('CLASS CAST EXCEPTION ' || str);
+            RETURN NULL;
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20103, 'SHOULD NOT GET THERE');
+        RETURN NULL;
+    END;
+BEGIN
+    x := str2nr( '1234123' );
+    DBMS_OUTPUT.PUT_LINE(x);
+    x := str2nr( '5.1' );
+    DBMS_OUTPUT.PUT_LINE(x);
+    x := str2nr( '4,123' );
+    DBMS_OUTPUT.PUT_LINE(x);
+END;
