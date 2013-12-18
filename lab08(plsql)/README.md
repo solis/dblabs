@@ -1,4 +1,6 @@
- Checklist ==
+ Checklist
+ 
+ 
 1. [+]
 2. [a, b, c, d]
 3. [+]
