@@ -1,13 +1,13 @@
---lab0619
+п»ї--lab0619
 
---1. Создайте последовательность.
+--1. РЎРѕР·РґР°Р№С‚Рµ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚СЊ.
 CREATE SEQUENCE ID_Generator
     INCREMENT BY 1
     START WITH 1
     NOMAXVALUE
     NOCYCLE;
 
---2. Добавьте в схему базы данных, разработанную Вами в лабораторной работе №1, новую сущность. Создайте для этой сущности таблицу (таблицы). Причем, поле этой таблицы с ограничением первичного ключа должно заполняться с помощью последовательности. Заполните таблицу данными.
+--2. Р”РѕР±Р°РІСЊС‚Рµ РІ СЃС…РµРјСѓ Р±Р°Р·С‹ РґР°РЅРЅС‹С…, СЂР°Р·СЂР°Р±РѕС‚Р°РЅРЅСѓСЋ Р’Р°РјРё РІ Р»Р°Р±РѕСЂР°С‚РѕСЂРЅРѕР№ СЂР°Р±РѕС‚Рµ в„–1, РЅРѕРІСѓСЋ СЃСѓС‰РЅРѕСЃС‚СЊ. РЎРѕР·РґР°Р№С‚Рµ РґР»СЏ СЌС‚РѕР№ СЃСѓС‰РЅРѕСЃС‚Рё С‚Р°Р±Р»РёС†Сѓ (С‚Р°Р±Р»РёС†С‹). РџСЂРёС‡РµРј, РїРѕР»Рµ СЌС‚РѕР№ С‚Р°Р±Р»РёС†С‹ СЃ РѕРіСЂР°РЅРёС‡РµРЅРёРµРј РїРµСЂРІРёС‡РЅРѕРіРѕ РєР»СЋС‡Р° РґРѕР»Р¶РЅРѕ Р·Р°РїРѕР»РЅСЏС‚СЊСЃСЏ СЃ РїРѕРјРѕС‰СЊСЋ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚Рё. Р—Р°РїРѕР»РЅРёС‚Рµ С‚Р°Р±Р»РёС†Сѓ РґР°РЅРЅС‹РјРё.
 CREATE TABLE
     RaceAreas
     (
@@ -52,7 +52,7 @@ INSERT INTO Events VALUES
 ALTER TABLE Competitions
     DELETE (Competition_Area);
 
---3. Создайте индексы для тех полей базы данных, для которых это необходимо (academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL – Student\Section 12 Working with Sequences).
+--3. РЎРѕР·РґР°Р№С‚Рµ РёРЅРґРµРєСЃС‹ РґР»СЏ С‚РµС… РїРѕР»РµР№ Р±Р°Р·С‹ РґР°РЅРЅС‹С…, РґР»СЏ РєРѕС‚РѕСЂС‹С… СЌС‚Рѕ РЅРµРѕР±С…РѕРґРёРјРѕ (academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL вЂ“ Student\Section 12 Working with Sequences).
 CREATE INDEX jockey_name_ind
     ON Jockey(Jockey_Name);
 
@@ -74,22 +74,25 @@ CREATE INDEX events_competition_racearea_ind
 CREATE INDEX racearea_guests_ind
     ON RaceAreas(RaceArea_MaxNumOfGuests);
 
---4. В одну из таблиц добавьте поле (внешний ключ), значения которого ссылаются на поле – первичный ключ этой таблицы (academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL – Student\Section 8 Working with DDL Statements). Составьте запросы на выборку данных с использованием рефлексивного соединения (academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL – Student\Section 3 Executing Database Joins\Self Joins and Hierarchical Queries).
+--4. Р’ РѕРґРЅСѓ РёР· С‚Р°Р±Р»РёС† РґРѕР±Р°РІСЊС‚Рµ РїРѕР»Рµ (РІРЅРµС€РЅРёР№ РєР»СЋС‡), Р·РЅР°С‡РµРЅРёСЏ РєРѕС‚РѕСЂРѕРіРѕ СЃСЃС‹Р»Р°СЋС‚СЃСЏ РЅР° РїРѕР»Рµ вЂ“ РїРµСЂРІРёС‡РЅС‹Р№ РєР»СЋС‡ СЌС‚РѕР№ С‚Р°Р±Р»РёС†С‹ (academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL вЂ“ Student\Section 8 Working with DDL Statements). РЎРѕСЃС‚Р°РІСЊС‚Рµ Р·Р°РїСЂРѕСЃС‹ РЅР° РІС‹Р±РѕСЂРєСѓ РґР°РЅРЅС‹С… СЃ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµРј СЂРµС„Р»РµРєСЃРёРІРЅРѕРіРѕ СЃРѕРµРґРёРЅРµРЅРёСЏ (academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL вЂ“ Student\Section 3 Executing Database Joins\Self Joins and Hierarchical Queries).
+ALTER TABLE Events
+    ADD (Competition_ID NUMBER(10));
+
 ALTER TABLE Events
     ADD (Competition_ID NUMBER(10) NOT NULL REFERENCES Competitions(Competition_ID));
 
--- добавим в таблицу Resuts иерархию - какая лошадь после какой финишировала
+-- РґРѕР±Р°РІРёРј РІ С‚Р°Р±Р»РёС†Сѓ Resuts РёРµСЂР°СЂС…РёСЋ - РєР°РєР°СЏ Р»РѕС€Р°РґСЊ РїРѕСЃР»Рµ РєР°РєРѕР№ С„РёРЅРёС€РёСЂРѕРІР°Р»Р°
 ALTER TABLE Results
     ADD (Results_HorseIDBefore NUMBER(10));
 
--- выберем лошадь, которая финишировала перед заданной
+-- РІС‹Р±РµСЂРµРј Р»РѕС€Р°РґСЊ, РєРѕС‚РѕСЂР°СЏ С„РёРЅРёС€РёСЂРѕРІР°Р»Р° РїРµСЂРµРґ Р·Р°РґР°РЅРЅРѕР№
 SELECT horsePrev.Horse_ID
     FROM Results horsePrev INNER JOIN Results horsePast
     ON horsePrev.Horse_ID = horsePast.Results_HorseIDBefore;
 
---Составьте запросы на выборку данных с использованием следующих операторов, конструкций и функций языка SQL:
---5. простого оператора CASE ();
--- сгруппировать жокеев по росту (группы до 150, 151-160, 161-170, 171-180, выше 181)
+--РЎРѕСЃС‚Р°РІСЊС‚Рµ Р·Р°РїСЂРѕСЃС‹ РЅР° РІС‹Р±РѕСЂРєСѓ РґР°РЅРЅС‹С… СЃ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµРј СЃР»РµРґСѓСЋС‰РёС… РѕРїРµСЂР°С‚РѕСЂРѕРІ, РєРѕРЅСЃС‚СЂСѓРєС†РёР№ Рё С„СѓРЅРєС†РёР№ СЏР·С‹РєР° SQL:
+--5. РїСЂРѕСЃС‚РѕРіРѕ РѕРїРµСЂР°С‚РѕСЂР° CASE ();
+-- СЃРіСЂСѓРїРїРёСЂРѕРІР°С‚СЊ Р¶РѕРєРµРµРІ РїРѕ СЂРѕСЃС‚Сѓ (РіСЂСѓРїРїС‹ РґРѕ 150, 151-160, 161-170, 171-180, РІС‹С€Рµ 181)
 SELECT Jockey_Name, Jockey_Weight,
     CASE Jockey_Height
         WHEN <=150
@@ -105,8 +108,8 @@ SELECT Jockey_Name, Jockey_Weight,
     AS Jockey_Height_Group
     FROM Jockeys;
 
---6. поискового оператора CASE();
--- вывести список лошадей, отсортированных по полу (его обозначить Male, Female)
+--6. РїРѕРёСЃРєРѕРІРѕРіРѕ РѕРїРµСЂР°С‚РѕСЂР° CASE();
+-- РІС‹РІРµСЃС‚Рё СЃРїРёСЃРѕРє Р»РѕС€Р°РґРµР№, РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹С… РїРѕ РїРѕР»Сѓ (РµРіРѕ РѕР±РѕР·РЅР°С‡РёС‚СЊ Male, Female)
 SELECT Horse_ID, Horse_Name, Horse_DateOfBirthe,
     CASE
         WHEN Horse_Gender = 'M' THEN 'Male'
@@ -116,8 +119,8 @@ SELECT Horse_ID, Horse_Name, Horse_DateOfBirthe,
     FROM Horses
     ORDER BY Horse_Gender_Full;
 
---7. оператора WITH();
--- выбрать лошадей-победителей маленьких соревнований (состоящих из одного заезда)
+--7. РѕРїРµСЂР°С‚РѕСЂР° WITH();
+-- РІС‹Р±СЂР°С‚СЊ Р»РѕС€Р°РґРµР№-РїРѕР±РµРґРёС‚РµР»РµР№ РјР°Р»РµРЅСЊРєРёС… СЃРѕСЂРµРІРЅРѕРІР°РЅРёР№ (СЃРѕСЃС‚РѕСЏС‰РёС… РёР· РѕРґРЅРѕРіРѕ Р·Р°РµР·РґР°)
 WITH LittleCompetitions AS
     (SELECT Competition_ID
         FROM Competitions
@@ -129,16 +132,16 @@ SELECT res.Horse_ID
         FROM LittleCompetitions) AND
         res.Race_HorsePlace = 1;
 
---8. встроенного представления();
--- выбрать результаты лошадей, на которых ездят очень низкие жокеи (<=150) и очень высокие (>=190)
+--8. РІСЃС‚СЂРѕРµРЅРЅРѕРіРѕ РїСЂРµРґСЃС‚Р°РІР»РµРЅРёСЏ();
+-- РІС‹Р±СЂР°С‚СЊ СЂРµР·СѓР»СЊС‚Р°С‚С‹ Р»РѕС€Р°РґРµР№, РЅР° РєРѕС‚РѕСЂС‹С… РµР·РґСЏС‚ РѕС‡РµРЅСЊ РЅРёР·РєРёРµ Р¶РѕРєРµРё (<=150) Рё РѕС‡РµРЅСЊ РІС‹СЃРѕРєРёРµ (>=190)
 SELECT h.Horse_Name, nonStandartJoe.Height, r.Race_HorsePlace
     FROM Results r
     NATURAL JOIN Horses h
     NATURAL JOIN (SELECT Jockey_ID, Jockey_Height FROM Jockeys WHERE Jockey_Height <=150 OR Jockey_Height >=190) nonStandartJoe
     GROUP BY nonStandartJoe.Height, r.Race_HorsePlace, h.Horse_Name;
 
---9. некоррелированного запроса((academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL – Student\Section 6 Creating Subqueries).);
--- выбрать лошадей, которые когда-либо участвовали в соревнованиях
+--9. РЅРµРєРѕСЂСЂРµР»РёСЂРѕРІР°РЅРЅРѕРіРѕ Р·Р°РїСЂРѕСЃР°((academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL вЂ“ Student\Section 6 Creating Subqueries).);
+-- РІС‹Р±СЂР°С‚СЊ Р»РѕС€Р°РґРµР№, РєРѕС‚РѕСЂС‹Рµ РєРѕРіРґР°-Р»РёР±Рѕ СѓС‡Р°СЃС‚РІРѕРІР°Р»Рё РІ СЃРѕСЂРµРІРЅРѕРІР°РЅРёСЏС…
 SELECT *
     FROM Horses
     WHERE Horse_ID IN
@@ -147,75 +150,34 @@ SELECT *
             GROUP BY Horse_ID)
     ORDER BY Horse_Name;
 
---10. коррелированного запроса(academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL – Student\Section 6 Creating Subqueries).);
--- найти соревнования, на которых присутствовало число гостей, равное максимально возможному для арены соревнований
-SELECT c.Competition_Name
-    FROM Competitions c
-    NATURAL JOIN Events e
-    WHERE e.RaceArea_ID IN
-        (SELECT RaceArea_ID
-            FROM RaceAreas
-            WHERE RaceArea_MaxNumOfGuests = e.Event_NumOfGuests);
+--10. РєРѕСЂСЂРµР»РёСЂРѕРІР°РЅРЅРѕРіРѕ Р·Р°РїСЂРѕСЃР°(academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL вЂ“ Student\Section 6 Creating Subqueries).);
 
---11. функции NULLIF (academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL – Student\Section 2 Using Single-Row Functions);
--- вывести список всех лошадей, скрыв пол у женских особей
+
+--11. С„СѓРЅРєС†РёРё NULLIF (academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL вЂ“ Student\Section 2 Using Single-Row Functions);
+-- РІС‹РІРµСЃС‚Рё СЃРїРёСЃРѕРє РІСЃРµС… Р»РѕС€Р°РґРµР№, СЃРєСЂС‹РІ РїРѕР» Сѓ Р¶РµРЅСЃРєРёС… РѕСЃРѕР±РµР№
 SELECT Horse_ID, Horse_Name, NULLIF(Horse_Gender, 'F') AS Gender, Horse_DateOfBirth
     FROM Horses;
 
---12. функции NVL2 (academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL – Student\Section 2 Using Single-Row Functions);
--- вывести соревнования с количество гостей, если количество гостей недоступно, вывести максимально возможное количество гостей на арене соревнований
+--12. С„СѓРЅРєС†РёРё NVL2 (academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL вЂ“ Student\Section 2 Using Single-Row Functions);
+-- РІС‹РІРµСЃС‚Рё СЃРѕСЂРµРІРЅРѕРІР°РЅРёСЏ СЃ РєРѕР»РёС‡РµСЃС‚РІРѕ РіРѕСЃС‚РµР№, РµСЃР»Рё РєРѕР»РёС‡РµСЃС‚РІРѕ РіРѕСЃС‚РµР№ РЅРµРґРѕСЃС‚СѓРїРЅРѕ, РІС‹РІРµСЃС‚Рё РјР°РєСЃРёРјР°Р»СЊРЅРѕ РІРѕР·РјРѕР¶РЅРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ РіРѕСЃС‚РµР№ РЅР° Р°СЂРµРЅРµ СЃРѕСЂРµРІРЅРѕРІР°РЅРёР№
 SELECT c.Competition_Name, NVL2(e.Event_NumberOfGuests, e.Event_NumberOfGuests, r.RaceArea_MaxNumOfGuests) AS Guest_Num
     FROM Events e
     NATURAL JOIN RaceAreas r
     NATURAL JOIN Competitions c;
 
---13. TOP-N анализа();
--- вывести последних 5 соревнований
+--13. TOP-N Р°РЅР°Р»РёР·Р°();
+-- РІС‹РІРµСЃС‚Рё РїРѕСЃР»РµРґРЅРёС… 5 СЃРѕСЂРµРІРЅРѕРІР°РЅРёР№
 SELECT *
     FROM (SELECT *
         FROM Competitions
         ORDER BY Competition_Date DESC)
     WHERE ROWNUM <= 5;
 
---14. функции ROLLUP().
--- подсчитать, каких мест сколько было занято лошадьми за время всех заездов
+--14. С„СѓРЅРєС†РёРё ROLLUP().
+-- РїРѕРґСЃС‡РёС‚Р°С‚СЊ, РєР°РєРёС… РјРµСЃС‚ СЃРєРѕР»СЊРєРѕ Р±С‹Р»Рѕ Р·Р°РЅСЏС‚Рѕ Р»РѕС€Р°РґСЊРјРё Р·Р° РІСЂРµРјСЏ РІСЃРµС… Р·Р°РµР·РґРѕРІ
 SELECT Race_HorsePlace, COUNT(Race_HorsePlace) AS How_much
     FROM Results
     GROUP BY ROLLUP(Race_HorsePlace)
     ORDER BY Race_HorsePlace;
 
---15. Составьте запрос на использование оператора MERGE языка манипулирования данными.
--- для новых мест проведения соревнований (данных в таблице NEW_RaceAreas), выяснить, действительно ли это новые места, или открываются дополнительные тррибуны для зрителей. Если места новые(совпадают RaceArea_Address), то добавить их в базу, если старые, то обновить в существующей записи максимально воможное уоличество гостей и площадь участка
-
-CREATE TABLE
-    NEW_RaceAreas
-    (
-        RaceArea_ID NUMBER(10) PRIMARY KEY,
-        RaceArea_Address VARCHAR2(300) NOT NULL,
-        RaceArea_MaxNumOfGuests NUMBER(10) NOT NULL
-            CHECK (RaceArea_MaxNumOfGuests > 0),
-        RaceArea_Square NUMBER(10) --in hectares
-            CHECK (RaceArea_Square > 0)
-    );
-
-INSERT INTO NEW_RaceAreas VALUES
-    (1, 'Knighton, Powys LD7 1DL, United Kingdom', 3000, 5000);
-
-INSERT INTO NEW_RaceAreas VALUES
-    (2, 'Ketley Bank, Telford, Telford and Wrekin TF2 0EB, United Kingdom', 12000, 11000);
-
-INSERT INTO NEW_RaceAreas VALUES
-    (3, '85 Llanelian Rd, Old Colwyn, Colwyn Bay, Conwy LL29 8UN, Great Bitain', 3000, 4000);
-
-MERGE INTO RaceAreas ra
-    USING (SELECT *
-        FROM NEW_RaceAreas) newra
-        ON (ra.RaceArea_Address = newra.RaceArea_Address)
-    WHEN MATCHED THEN
-        UPDATE SET ra.RaceArea_MaxNumOfGuests = newra.RaceArea_MaxNumOfGuests
-        AND ra.RaceArea_Square = newra.RaceArea_Square
-    WHEN NOT MATCHED THEN
-        INSERT (ra.RaceArea_ID, ra.RaceArea_Address, ra.RaceArea_MaxNumOfGuests, ra.RaceArea_Square)
-        VALUES (RaceArea_ID_Generator.NEXTVAL, newra.RaceArea_Address, newra.RaceArea_MaxNumOfGuests, newra.RaceArea_Square);
-         
-SELECT * FROM RaceAreas;
+--15. РЎРѕСЃС‚Р°РІСЊС‚Рµ Р·Р°РїСЂРѕСЃ РЅР° РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ РѕРїРµСЂР°С‚РѕСЂР° MERGE СЏР·С‹РєР° РјР°РЅРёРїСѓР»РёСЂРѕРІР°РЅРёСЏ РґР°РЅРЅС‹РјРё.
