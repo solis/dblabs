@@ -1,4 +1,4 @@
---lab0619
+﻿--lab0619
 
 --1. Создайте последовательность.
 CREATE SEQUENCE ID_Generator
@@ -151,6 +151,14 @@ SELECT *
     ORDER BY Horse_Name;
 
 --10. коррелированного запроса(academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL – Student\Section 6 Creating Subqueries).);
+-- найти соревнования, на которых присутствовало число гостей, равное максимально возможному для арены соревнований
+SELECT c.Competition_Name
+    FROM Competitions c
+    NATURAL JOIN Events e
+    WHERE e.RaceArea_ID IN
+        (SELECT RaceArea_ID
+            FROM RaceAreas
+            WHERE RaceArea_MaxNumOfGuests = e.Event_NumOfGuests);
 
 
 --11. функции NULLIF (academy.oracle.com\iLearning\2013-2014 Oracle Academy Database Programming with SQL – Student\Section 2 Using Single-Row Functions);
@@ -181,3 +189,37 @@ SELECT Race_HorsePlace, COUNT(Race_HorsePlace) AS How_much
     ORDER BY Race_HorsePlace;
 
 --15. Составьте запрос на использование оператора MERGE языка манипулирования данными.
+-- для новых мест проведения соревнований (данных в таблице NEW_RaceAreas), выяснить, действительно ли это новые места, или открываются дополнительные тррибуны для зрителей. Если места новые(совпадают RaceArea_Address), то добавить их в базу, если старые, то обновить в существующей записи максимально воможное уоличество гостей и площадь участка
+
+CREATE TABLE
+    NEW_RaceAreas
+    (
+        RaceArea_ID NUMBER(10) PRIMARY KEY,
+        RaceArea_Address VARCHAR2(300) NOT NULL,
+        RaceArea_MaxNumOfGuests NUMBER(10) NOT NULL
+            CHECK (RaceArea_MaxNumOfGuests > 0),
+        RaceArea_Square NUMBER(10) --in hectares
+            CHECK (RaceArea_Square > 0)
+    );
+
+INSERT INTO NEW_RaceAreas VALUES
+    (1, 'Knighton, Powys LD7 1DL, United Kingdom', 3000, 5000);
+
+INSERT INTO NEW_RaceAreas VALUES
+    (2, 'Ketley Bank, Telford, Telford and Wrekin TF2 0EB, United Kingdom', 12000, 11000);
+
+INSERT INTO NEW_RaceAreas VALUES
+    (3, '85 Llanelian Rd, Old Colwyn, Colwyn Bay, Conwy LL29 8UN, Great Bitain', 3000, 4000);
+
+MERGE INTO RaceAreas ra
+    USING (SELECT *
+        FROM NEW_RaceAreas) newra
+        ON (ra.RaceArea_Address = newra.RaceArea_Address)
+    WHEN MATCHED THEN
+        UPDATE SET ra.RaceArea_MaxNumOfGuests = newra.RaceArea_MaxNumOfGuests
+        AND ra.RaceArea_Square = newra.RaceArea_Square
+    WHEN NOT MATCHED THEN
+        INSERT (ra.RaceArea_ID, ra.RaceArea_Address, ra.RaceArea_MaxNumOfGuests, ra.RaceArea_Square)
+        VALUES (RaceArea_ID_Generator.NEXTVAL, newra.RaceArea_Address, newra.RaceArea_MaxNumOfGuests, newra.RaceArea_Square);
+         
+SELECT * FROM RaceAreas;
