@@ -296,23 +296,53 @@ DECLARE
 BEGIN
     OPEN CUR(:NEW.EMPNO);
     FETCH CUR INTO R;
-    IF (:NEW.SALVALUE < R) THEN
+    IF :NEW.SALVALUE < R THEN
         :NEW.SALVALUE := :OLD.SALVALUE;
     END IF;
     CLOSE CUR;
-END;
+END CHECK_SALARY;
 
 
 -- 08. Создайте триггер, действующий при удалении записи из таблицы CAREER. Если в удаляемой строке
 --     поле ENDDATE содержит NULL, то запись не удаляется, в противном случае удаляется.
-CREATE OR REPLACE  TRIGGER CHECK_NOT_NULL
-    AFTER DELETE ON CAREER
-    FOR EACH ROW
-    WHEN (OLD.ENDDATE IS NULL)
-BEGIN
-  INSERT INTO CAREER VALUES (OLD.JOBNO, OLD.EMPNO, OLD.STARTDATE, OLD.ENDDATE);
-END;
 
+CREATE OR REPLACE  TRIGGER CHECK_NOT_NULL
+    BEFORE DELETE ON CAREER
+    FOR EACH ROW
+BEGIN
+    IF OLD.ENDDATE IS NULL
+        INSERT INTO CAREER VALUES (OLD.JOBNO, OLD.EMPNO, OLD.STARTDATE, OLD.ENDDATE);
+    END IF;
+END CHECK_NOT_NULL;
+
+--- ALTERNATIVE ------------------------------------------------------------------------------------
+
+CREATE TABLE CAREER
+       (JOBNO NUMBER(4)
+             REFERENCES JOB(JOBNO) NOT NULL,
+        EMPNO NUMBER(4)
+             REFERENCES EMP(EMPNO) NOT NULL,
+        DEPTNO NUMBER(4)
+             REFERENCES DEPT(DEPTNO),
+    STARTDATE DATE
+             NOT NULL,
+    ENDDATE DATE);
+
+CREATE OR REPLACE  TRIGGER CHECK_NOT_NULL
+    BEFORE DELETE ON CAREER
+    FOR EACH ROW
+BEGIN
+    IF OLD.ENDDATE IS NULL
+        INSERT INTO CAREER_TMP VALUES (OLD.JOBNO, OLD.EMPNO, OLD.STARTDATE, OLD.ENDDATE);
+    END IF;
+END CHECK_NOT_NULL;
+
+CREATE OR REPLACE TRIGGER COPY_EMP
+    INSTEAD OF INSERT ON CAREER_TMP
+    FOR EACH ROW
+BEGIN
+   INSERT INTO CAREER VALUES (NEW.JOBNO, NEW.EMPNO, NEW.STARTDATE, NEW.ENDDATE);
+END
 -- 09. Создайте триггер, действующий на добавление или изменение данных в таблице EMP.
 --     Если во вставляемой или изменяемой строке поле BIRTHDATE содержит NULL, то после вставки или
 --     изменения должно быть выдано сообщение ‘BERTHDATE is NULL’. Если во вставляемой или изменяемой
@@ -322,16 +352,16 @@ CREATE OR REPLACE TRIGGER ON_EMP_INSERT_UPDATE
     BEFORE INSERT OR UPDATE ON EMP
     FOR EACH ROW
 BEGIN
-    IF NEW.BIRTHDATE IS NULL THEN
-        RAISE_APPLICATION_ERROR(-2000, 'BIRTHDATE IS NULL')
+    IF :NEW.BIRTHDATE IS NULL THEN
+        DBMS_OUTPUT.PUT_LINE('BIRTHDATE IS NULL');
     END IF;
 
-    IF NEW.BIRTHDATE < to_date('01-01-1940', 'dd-mm-yyyy') THEN
-        RAISE_APPLICATION_ERROR(-3000, 'PENTIONA')
+    IF :NEW.BIRTHDATE < to_date('01-01-1940', 'dd-mm-yyyy') THEN
+        DBMS_OUTPUT.PUT_LINE('PENTIONA');
     END IF;
 
-    NEW.EMPNAME := UCASE(NEW.EMPNAME);
-END;
+    :NEW.EMPNAME := UPPER(:NEW.EMPNAME);
+END ON_EMP_INSERT_UPDATE;
 
 --10.  Создайте программу изменения типа заданной переменной из символьного типа (VARCHAR2) в
 --     числовой тип (NUMBER).
